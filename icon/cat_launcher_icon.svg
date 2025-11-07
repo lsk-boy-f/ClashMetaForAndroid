@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- 脸部渐变 -->
+    <radialGradient id="faceGradient" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" style="stop-color:#B3E5FC;stop-opacity:1" />
+      <stop offset="60%" style="stop-color:#4FC3F7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0288D1;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- 耳朵渐变 -->
+    <linearGradient id="earGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4FC3F7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0288D1;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- 眼睛高光渐变 -->
+    <radialGradient id="eyeShine" cx="35%" cy="35%" r="50%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E3F2FD;stop-opacity:0" />
+    </radialGradient>
+    
+    <!-- 鼻子渐变 -->
+    <linearGradient id="noseGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF8A9D;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FF6B9D;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E91E63;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- 阴影滤镜 -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="8"/>
+      <feOffset dx="0" dy="4" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- 脸部阴影 -->
+  <ellipse cx="256" cy="268" rx="215" ry="210" fill="#01579B" opacity="0.2" />
+  
+  <!-- 猫脸主体 - 带渐变 -->
+  <circle cx="256" cy="256" r="220" fill="url(#faceGradient)" filter="url(#shadow)" />
+  
+  <!-- 脸部高光 -->
+  <ellipse cx="180" cy="180" rx="80" ry="60" fill="#FFFFFF" opacity="0.3" />
+  <ellipse cx="340" cy="190" rx="60" ry="45" fill="#FFFFFF" opacity="0.2" />
+  
+  <!-- 左耳 - 外层 -->
+  <path d="M 120 100 L 100 40 L 180 80 Z" fill="url(#earGradient)" filter="url(#shadow)" />
+  <!-- 左耳 - 阴影层 -->
+  <path d="M 125 95 L 110 50 L 170 82 Z" fill="#0277BD" opacity="0.4" />
+  <!-- 左耳 - 内部 -->
+  <path d="M 140 85 L 130 65 L 160 80 Z" fill="#FFB6C1" />
+  <path d="M 145 80 L 138 70 L 155 78 Z" fill="#FFC1CC" opacity="0.6" />
+  
+  <!-- 右耳 - 外层 -->
+  <path d="M 392 100 L 412 40 L 332 80 Z" fill="url(#earGradient)" filter="url(#shadow)" />
+  <!-- 右耳 - 阴影层 -->
+  <path d="M 387 95 L 402 50 L 342 82 Z" fill="#0277BD" opacity="0.4" />
+  <!-- 右耳 - 内部 -->
+  <path d="M 372 85 L 382 65 L 352 80 Z" fill="#FFB6C1" />
+  <path d="M 367 80 L 374 70 L 357 78 Z" fill="#FFC1CC" opacity="0.6" />
+  
+  <!-- 脸颊阴影 - 增加立体感 -->
+  <ellipse cx="160" cy="290" rx="55" ry="65" fill="#0288D1" opacity="0.15" />
+  <ellipse cx="352" cy="290" rx="55" ry="65" fill="#0288D1" opacity="0.15" />
+  
+  <!-- 左眼睛 - 眼白带阴影 -->
+  <ellipse cx="190" cy="235" rx="46" ry="56" fill="#01579B" opacity="0.2" />
+  <ellipse cx="190" cy="230" rx="45" ry="55" fill="#FFFFFF" />
+  <ellipse cx="190" cy="232" rx="42" ry="52" fill="url(#eyeShine)" />
+  
+  <!-- 左眼睛 - 虹膜（天蓝色） -->
+  <ellipse cx="190" cy="235" rx="28" ry="40" fill="#0288D1" />
+  <ellipse cx="188" cy="233" rx="24" ry="36" fill="#4FC3F7" opacity="0.6" />
+  
+  <!-- 左眼睛 - 瞳孔 -->
+  <ellipse cx="190" cy="235" rx="16" ry="28" fill="#000000" />
+  <ellipse cx="190" cy="228" rx="14" ry="24" fill="#1A1A1A" />
+  
+  <!-- 左眼睛 - 高光 -->
+  <ellipse cx="183" cy="218" rx="10" ry="14" fill="#FFFFFF" opacity="0.9" />
+  <circle cx="195" cy="245" r="5" fill="#FFFFFF" opacity="0.6" />
+  
+  <!-- 右眼睛 - 眼白带阴影 -->
+  <ellipse cx="322" cy="235" rx="46" ry="56" fill="#01579B" opacity="0.2" />
+  <ellipse cx="322" cy="230" rx="45" ry="55" fill="#FFFFFF" />
+  <ellipse cx="322" cy="232" rx="42" ry="52" fill="url(#eyeShine)" />
+  
+  <!-- 右眼睛 - 虹膜（天蓝色） -->
+  <ellipse cx="322" cy="235" rx="28" ry="40" fill="#0288D1" />
+  <ellipse cx="320" cy="233" rx="24" ry="36" fill="#4FC3F7" opacity="0.6" />
+  
+  <!-- 右眼睛 - 瞳孔 -->
+  <ellipse cx="322" cy="235" rx="16" ry="28" fill="#000000" />
+  <ellipse cx="322" cy="228" rx="14" ry="24" fill="#1A1A1A" />
+  
+  <!-- 右眼睛 - 高光 -->
+  <ellipse cx="315" cy="218" rx="10" ry="14" fill="#FFFFFF" opacity="0.9" />
+  <circle cx="327" cy="245" r="5" fill="#FFFFFF" opacity="0.6" />
+  
+  <!-- 鼻子 - 带渐变和阴影 -->
+  <path d="M 256 283 L 240 303 L 256 313 L 272 303 Z" fill="#C2185B" opacity="0.3" />
+  <path d="M 256 280 L 240 300 L 256 310 L 272 300 Z" fill="url(#noseGradient)" />
+  <ellipse cx="248" cy="292" rx="6" ry="8" fill="#FFFFFF" opacity="0.4" />
+  <path d="M 256 300 L 256 310 L 260 308 L 252 308 Z" fill="#C2185B" opacity="0.5" />
+  
+  <!-- 嘴巴 - 增加立体感 -->
+  <path d="M 256 310 Q 230 330 220 320" stroke="#2C3E50" stroke-width="7" fill="none" stroke-linecap="round" opacity="0.3" />
+  <path d="M 256 310 Q 282 330 292 320" stroke="#2C3E50" stroke-width="7" fill="none" stroke-linecap="round" opacity="0.3" />
+  <path d="M 256 310 Q 230 328 220 319" stroke="#1A1A1A" stroke-width="5" fill="none" stroke-linecap="round" />
+  <path d="M 256 310 Q 282 328 292 319" stroke="#1A1A1A" stroke-width="5" fill="none" stroke-linecap="round" />
+  
+  <!-- 胡须左侧 - 带渐变效果 -->
+  <line x1="120" y1="260" x2="50" y2="250" stroke="#2C3E50" stroke-width="4.5" stroke-linecap="round" opacity="0.3" />
+  <line x1="120" y1="260" x2="50" y2="250" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.8" />
+  
+  <line x1="120" y1="280" x2="50" y2="280" stroke="#2C3E50" stroke-width="4.5" stroke-linecap="round" opacity="0.3" />
+  <line x1="120" y1="280" x2="50" y2="280" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.8" />
+  
+  <line x1="120" y1="300" x2="50" y2="310" stroke="#2C3E50" stroke-width="4.5" stroke-linecap="round" opacity="0.3" />
+  <line x1="120" y1="300" x2="50" y2="310" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.8" />
+  
+  <!-- 胡须右侧 - 带渐变效果 -->
+  <line x1="392" y1="260" x2="462" y2="250" stroke="#2C3E50" stroke-width="4.5" stroke-linecap="round" opacity="0.3" />
+  <line x1="392" y1="260" x2="462" y2="250" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.8" />
+  
+  <line x1="392" y1="280" x2="462" y2="280" stroke="#2C3E50" stroke-width="4.5" stroke-linecap="round" opacity="0.3" />
+  <line x1="392" y1="280" x2="462" y2="280" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.8" />
+  
+  <line x1="392" y1="300" x2="462" y2="310" stroke="#2C3E50" stroke-width="4.5" stroke-linecap="round" opacity="0.3" />
+  <line x1="392" y1="300" x2="462" y2="310" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.8" />
+  
+  <!-- 腮红左侧 - 粉蓝色 -->
+  <ellipse cx="140" cy="315" rx="32" ry="22" fill="#FF8A80" opacity="0.2" />
+  <ellipse cx="140" cy="312" rx="30" ry="20" fill="#FFB3D9" opacity="0.4" />
+  
+  <!-- 腮红右侧 - 粉蓝色 -->
+  <ellipse cx="372" cy="315" rx="32" ry="22" fill="#FF8A80" opacity="0.2" />
+  <ellipse cx="372" cy="312" rx="30" ry="20" fill="#FFB3D9" opacity="0.4" />
+  
+  <!-- 额头毛发纹理暗示 -->
+  <path d="M 220 140 Q 230 135 240 140" stroke="#0277BD" stroke-width="2" fill="none" opacity="0.3" stroke-linecap="round" />
+  <path d="M 260 135 Q 270 130 280 135" stroke="#0277BD" stroke-width="2" fill="none" opacity="0.3" stroke-linecap="round" />
+  <path d="M 240 145 Q 256 138 272 145" stroke="#0277BD" stroke-width="2" fill="none" opacity="0.3" stroke-linecap="round" />
+</svg>
