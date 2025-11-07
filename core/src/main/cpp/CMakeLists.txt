@@ -7,25 +7,41 @@ execute_process(
   COMMAND git submodule foreach git log -1 --format=%H   
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} 
   OUTPUT_VARIABLE COMMIT_HASH
+  RESULT_VARIABLE HASH_RESULT
+  ERROR_QUIET
 )
-string(REPLACE "\n" ";" COMMIT_HASH "${COMMIT_HASH}")
-list(GET COMMIT_HASH 1 COMMIT_HASH)
-string (REGEX REPLACE "[\n\t\r]" "" COMMIT_HASH ${COMMIT_HASH})
-string(SUBSTRING ${COMMIT_HASH} 0 7 COMMIT_HASH)
-message(STATUS "git hash= ${COMMIT_HASH}")
+
+if(NOT HASH_RESULT EQUAL 0)
+  message(WARNING "Failed to get git hash, using default")
+  set(COMMIT_HASH "unknown")
+else()
+  string(REPLACE "\n" ";" COMMIT_HASH "${COMMIT_HASH}")
+  list(GET COMMIT_HASH 1 COMMIT_HASH)
+  string (REGEX REPLACE "[\n\t\r]" "" COMMIT_HASH ${COMMIT_HASH})
+  string(SUBSTRING ${COMMIT_HASH} 0 7 COMMIT_HASH)
+  message(STATUS "git hash= ${COMMIT_HASH}")
+endif()
 
 # 获取分支名称
 execute_process(
   COMMAND git submodule foreach git branch -r --contains ${COMMIT_HASH}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} 
   OUTPUT_VARIABLE CURRENT_BRANCH
+  RESULT_VARIABLE BRANCH_RESULT
+  ERROR_QUIET
 )
-string(REPLACE "\n" ";" CURRENT_BRANCH "${CURRENT_BRANCH}")
-list(GET CURRENT_BRANCH 1 CURRENT_BRANCH)
-string (REGEX REPLACE "origin/" "" CURRENT_BRANCH ${CURRENT_BRANCH})
-string (REGEX REPLACE "[\n\t\r]" "" CURRENT_BRANCH ${CURRENT_BRANCH})
-#string(SUBSTRING ${CURRENT_BRANCH} 0 8 CURRENT_BRANCH)
-message(STATUS "git current branch = ${CURRENT_BRANCH}")
+
+if(NOT BRANCH_RESULT EQUAL 0)
+  message(WARNING "Failed to get branch name, using default")
+  set(CURRENT_BRANCH "unknown")
+else()
+  string(REPLACE "\n" ";" CURRENT_BRANCH "${CURRENT_BRANCH}")
+  list(GET CURRENT_BRANCH 1 CURRENT_BRANCH)
+  string (REGEX REPLACE "origin/" "" CURRENT_BRANCH ${CURRENT_BRANCH})
+  string (REGEX REPLACE "[\n\t\r]" "" CURRENT_BRANCH ${CURRENT_BRANCH})
+  #string(SUBSTRING ${CURRENT_BRANCH} 0 8 CURRENT_BRANCH)
+  message(STATUS "git current branch = ${CURRENT_BRANCH}")
+endif()
 
 # 获取生成时间
 string(TIMESTAMP COMPILE_TIME "%y%m%d")

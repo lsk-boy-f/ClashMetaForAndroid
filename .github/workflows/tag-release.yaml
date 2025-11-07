@@ -1,0 +1,74 @@
+name: Tag Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  TagRelease:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout submodules
+        run: git submodule update --init --recursive --force
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.26"
+          check-latest: true
+
+      - name: Apply Patches
+        run: |
+          cd $(go env GOROOT)
+          for p in $GITHUB_WORKSPACE/.github/patch/*.patch; do patch --verbose -p 1 < "$p"; done
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Update CA
+        run: |
+          sudo apt-get update && sudo apt-get install ca-certificates
+          sudo update-ca-certificates
+          cp -f /etc/ssl/certs/ca-certificates.crt core/src/foss/golang/clash/component/ca/ca-certificates.crt
+
+      - name: Create signing keystore
+        run: |
+          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+          touch signing.properties
+          echo keystore.path=release.keystore >> signing.properties
+          echo keystore.password="${{ secrets.SIGNING_STORE_PASSWORD }}" >> signing.properties
+          echo key.alias="${{ secrets.SIGNING_KEY_ALIAS }}" >> signing.properties
+          echo key.password="${{ secrets.SIGNING_KEY_PASSWORD }}" >> signing.properties
+          cat signing.properties
+
+      - name: Release Build
+        run: ./gradlew --no-daemon app:assembleMetaRelease
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: app/build/outputs/apk/meta/release/*
+          generate_release_notes: true
+          prerelease: false
