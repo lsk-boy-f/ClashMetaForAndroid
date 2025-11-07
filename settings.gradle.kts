@@ -5,7 +5,7 @@ include(":core")
 include(":service")
 include(":design")
 include(":common")
-include(":hideapi")
+//include(":hideapi")
 
 pluginManagement {
     repositories {
