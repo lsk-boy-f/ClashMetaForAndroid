@@ -1,0 +1,202 @@
+name: Sync Fork and Auto Release
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'  # 每4小时检查一次
+  workflow_dispatch:
+
+jobs:
+  # ── Job 1: 同步上游 main + tags，检测是否有新 tag 需要构建 ──
+  sync-and-check:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+      upstream_tag: ${{ steps.check.outputs.upstream_tag }}
+      shaw_tag: ${{ steps.check.outputs.shaw_tag }}
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Add upstream
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git remote add upstream https://github.com/MetaCubeX/ClashMetaForAndroid.git
+
+      - name: Sync upstream main and tags
+        run: |
+          git config user.name 'GitHub Action'
+          git config user.email 'action@github.com'
+
+          git fetch upstream
+          git fetch upstream --tags
+
+          git checkout main
+          git rebase upstream/main || {
+            echo "Rebase failed, resetting to upstream/main"
+            git rebase --abort
+            git reset --hard upstream/main
+          }
+          git push origin main --force
+          git push origin --tags --force
+
+      - name: Check latest upstream tag
+        id: check
+        run: |
+          # 获取上游最新的 v* tag（按语义版本降序排列）
+          UPSTREAM_TAG=$(git tag -l 'v*' --sort=-version:refname | grep -v '_shaw' | head -n 1)
+          if [ -z "$UPSTREAM_TAG" ]; then
+            echo "No upstream tags found"
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          SHAW_TAG="${UPSTREAM_TAG}_shaw"
+          echo "Latest upstream tag: $UPSTREAM_TAG"
+          echo "Expected shaw tag:  $SHAW_TAG"
+          echo "upstream_tag=$UPSTREAM_TAG" >> "$GITHUB_OUTPUT"
+          echo "shaw_tag=$SHAW_TAG" >> "$GITHUB_OUTPUT"
+
+          # 检查 _shaw tag 是否已存在于 origin
+          if git ls-remote --tags origin "refs/tags/$SHAW_TAG" | grep -q "$SHAW_TAG"; then
+            echo "Tag $SHAW_TAG already exists — skipping build"
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Tag $SHAW_TAG does not exist — will build and release"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ── Job 2: 基于上游 tag 合入 patch、构建 APK、发布 Release ──
+  build-and-release:
+    needs: sync-and-check
+    if: needs.sync-and-check.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    env:
+      UPSTREAM_TAG: ${{ needs.sync-and-check.outputs.upstream_tag }}
+      SHAW_TAG: ${{ needs.sync-and-check.outputs.shaw_tag }}
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Save fork-only patches before switching branch
+        run: |
+          # fork 的 .github/patch/ 目录在上游 tag 中不存在，需要提前保存
+          mkdir -p /tmp/patches
+          cp -v .github/patch/*.patch /tmp/patches/
+
+      - name: Checkout upstream tag and apply shaw patch
+        run: |
+          git config user.name 'GitHub Action'
+          git config user.email 'action@github.com'
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+          git remote add upstream https://github.com/MetaCubeX/ClashMetaForAndroid.git || true
+          git fetch upstream --tags
+
+          # 切换到上游 tag
+          git checkout "$UPSTREAM_TAG"
+
+          # 使用 git am 合入 shaw patch（保留原始 commit 信息）
+          git am --3way /tmp/patches/0001-build-for-shaw.patch
+
+      - name: Checkout submodules
+        run: git submodule update --init --recursive --force
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.26"
+          check-latest: true
+
+      - name: Apply Go runtime patches
+        run: |
+          cd $(go env GOROOT)
+          # 仅应用上游 tag 自带的补丁，若上游已删除则跳过
+          shopt -s nullglob
+          patches=("$GITHUB_WORKSPACE"/.github/patch/*.patch)
+          if [ ${#patches[@]} -eq 0 ]; then
+            echo "No Go runtime patches found in upstream tag — skipping"
+            exit 0
+          fi
+          for p in "${patches[@]}"; do
+            name=$(basename "$p")
+            [ "$name" = "0001-build-for-shaw.patch" ] && continue
+            echo "Applying Go patch: $name"
+            patch --verbose -p 1 < "$p"
+          done
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Update CA
+        run: |
+          sudo apt-get update && sudo apt-get install ca-certificates
+          sudo update-ca-certificates
+          cp -f /etc/ssl/certs/ca-certificates.crt core/src/foss/golang/clash/component/ca/ca-certificates.crt
+
+      - name: Setup local.properties
+        run: |
+          cat > local.properties << EOF
+          custom.application.id=com.github.metacubex.clash.shaw.meta
+          remove.suffix=true
+          EOF
+
+      - name: Create signing keystore
+        run: |
+          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+          cat > signing.properties << EOF
+          keystore.password=${{ secrets.SIGNING_STORE_PASSWORD }}
+          key.alias=${{ secrets.SIGNING_KEY_ALIAS }}
+          key.password=${{ secrets.SIGNING_KEY_PASSWORD }}
+          EOF
+
+      - name: Release Build
+        run: ./gradlew --no-daemon app:assembleMetaRelease
+
+      - name: Create and push shaw tag
+        run: |
+          # 构建成功后再创建 tag，避免构建失败时 tag 已存在导致不再重试
+          git tag -a "$SHAW_TAG" -m "Release $SHAW_TAG based on $UPSTREAM_TAG"
+          git push origin "$SHAW_TAG" --force
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.SHAW_TAG }}
+          name: "Release ${{ env.SHAW_TAG }}"
+          body: |
+            ## Clash Meta for Android — Shaw Build
+
+            基于上游版本: `${{ env.UPSTREAM_TAG }}`
+
+            ### 自定义修改
+            - 自定义包名 (`com.github.metacubex.clash.shaw.meta`)
+            - 自定义图标
+
+            ---
+            *自动构建自上游发布*
+          files: app/build/outputs/apk/meta/release/*
+          generate_release_notes: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}

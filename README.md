@@ -49,6 +49,31 @@ Feature of [Clash.Meta](https://github.com/MetaCubeX/Clash.Meta)
    key.password=<key password>
    ```
 
+   Or set keystore in GitHub Actions for automated builds:
+
+### GitHub Actions Secrets
+
+For automated workflows, configure these secrets in GitHub (Repository → Settings → Secrets and variables → Actions):
+
+#### Build Release (`tag-release.yaml`)
+1. Convert keystore to base64 (local machine):
+   ```bash
+   base64 release.keystore > keystore.b64
+   ```
+   Copy the output content.
+
+2. Add to GitHub Secrets:
+   - `RELEASE_KEYSTORE_BASE64`: Paste the base64 content
+   - `SIGNING_STORE_PASSWORD`: keystore password
+   - `SIGNING_KEY_ALIAS`: key alias
+   - `SIGNING_KEY_PASSWORD`: key password
+
+#### Sync Fork (`sync-fork.yaml`)
+- `GH_PAT`: Personal Access Token for syncing upstream repository
+  1. Go to GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+  2. Create new token with `repo` permissions
+  3. Copy the token and add to GitHub Secrets
+
 6. Build
 
    ```bash
