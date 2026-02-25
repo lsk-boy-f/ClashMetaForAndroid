@@ -9,7 +9,7 @@ plugins {
 }
 
 dependencies {
-//    compileOnly(project(":hideapi"))
+    compileOnly(project(":hideapi"))
 
     implementation(project(":core"))
     implementation(project(":service"))

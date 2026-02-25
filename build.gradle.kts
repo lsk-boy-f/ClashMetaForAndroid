@@ -2,7 +2,6 @@
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.BaseExtension
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URL
 import java.util.*
 
@@ -56,7 +55,7 @@ subprojects {
                 else "com.github.kr328.clash.$name"
             }
 
-            minSdk = 29
+            minSdk = 21
             targetSdk = 35
 
             versionName = "2.11.23"
@@ -66,12 +65,12 @@ subprojects {
             resValue("integer", "release_code", "$versionCode")
 
             ndk {
-                abiFilters += listOf("arm64-v8a")
+                abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
             }
 
             externalNativeBuild {
                 cmake {
-                    abiFilters("arm64-v8a")
+                    abiFilters("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
                 }
             }
 
@@ -152,7 +151,7 @@ subprojects {
                         keystore.inputStream().use(this::load)
                     }
 
-                    storeFile = file(prop.getProperty("keystore.path")!!)
+                    storeFile = rootProject.file("release.keystore")
                     storePassword = prop.getProperty("keystore.password")!!
                     keyAlias = prop.getProperty("key.alias")!!
                     keyPassword = prop.getProperty("key.password")!!
@@ -189,20 +188,14 @@ subprojects {
                     isEnable = true
                     isUniversalApk = true
                     reset()
-                    include("arm64-v8a")
+                    include("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
                 }
             }
         }
 
         compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_17
-            targetCompatibility = JavaVersion.VERSION_17
-        }
-    }
-
-    tasks.withType<KotlinCompile> {
-        kotlinOptions {
-            jvmTarget = "17"
+            sourceCompatibility = JavaVersion.VERSION_21
+            targetCompatibility = JavaVersion.VERSION_21
         }
     }
 }
